@@ -1,0 +1,10 @@
+# Goal
+string object_id
+int32 target_bin
+---
+# Result
+string status
+---
+# Feedback
+float32 percent_complete
+string current_stage

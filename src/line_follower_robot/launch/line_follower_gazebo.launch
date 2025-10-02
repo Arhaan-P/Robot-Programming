@@ -1,0 +1,26 @@
+<launch>
+  <!-- Launch Gazebo with the world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find line_follower_robot)/worlds/line_track.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="recording" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <!-- Spawn the robot -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find line_follower_robot)/urdf/line_follower.urdf"/>
+  
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" 
+        args="-urdf -model line_follower -param robot_description -x -3 -y 0 -z 0.1" />
+
+  <!-- Robot state publisher -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="30.0" />
+  </node>
+
+  <!-- Line follower node -->
+  <node pkg="line_follower_robot" type="line_follower.py" name="line_follower" output="screen"/>
+
+</launch>

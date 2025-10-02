@@ -1,0 +1,14 @@
+<launch>
+    <!-- Publisher 1 -->
+    <node pkg="multi_pub_sub" type="publisher1.py" name="p1" output="screen" />
+
+    <!-- Publisher 2 -->
+    <node pkg="multi_pub_sub" type="publisher2.py" name="p2" output="screen" />
+
+    <!-- Subscriber 1 -->
+    <node pkg="multi_pub_sub" type="subscriber1.py" name="s1" output="screen" />
+
+    <!-- Subscriber 2 -->
+    <node pkg="multi_pub_sub" type="subscriber2.py" name="s2" output="screen" />
+</launch>
+
