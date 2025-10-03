@@ -10,7 +10,7 @@
   </include>
 
   <!-- Spawn the robot -->
-  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find line_follower_robot)/urdf/line_follower.urdf"/>
+  <param name="robot_description" textfile="$(find line_follower_robot)/urdf/line_follower.urdf"/>
   
   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" 
         args="-urdf -model line_follower -param robot_description -x -3 -y 0 -z 0.1" />
