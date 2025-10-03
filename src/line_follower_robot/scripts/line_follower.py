@@ -15,40 +15,22 @@ class RobustLineFollower:
         self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.image_sub = rospy.Subscriber('/turtle_camera/image_raw', Image, 
                                           self.camera_callback)
-        
         self.bridge = CvBridge()
-        
         self.state = "FOLLOWING"
-        
         self.consecutive_high_errors = 0
-        
         self.search_start_time = None
-        
         self.turn_start_time = None
-        
         self.last_error = 0
-        
-        
         self.error_threshold = 15
-        
         self.required_consecutive = 3
-        
         self.max_search_time = 3.0
-        
         self.normal_linear_speed = 0.3
-        
         self.search_linear_speed = 0.1
-        
         self.turn_duration = 1.2
-        
         self.turn_angular_speed = 0.6
-        
         self.Kp = 0.003
-        
         self.Kd = 0.001
-        
         self.image_center_x = 320
-        
         self.rate = rospy.Rate(20)
     
     def camera_callback(self, msg):
