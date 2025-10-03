@@ -10,17 +10,116 @@
 
 ## 📋 TABLE OF CONTENTS
 
-1. [Setup & Build Commands](#setup--build-commands)
-2. [Publisher Templates](#publisher-templates)
-3. [Subscriber Templates](#subscriber-templates)
-4. [Service Templates](#service-templates)
-5. [Action Templates](#action-templates)
-6. [Launch File Templates](#launch-file-templates)
-7. [Turtlesim Movement Patterns](#turtlesim-movement-patterns)
-8. [Line Follower Code](#line-follower-code)
-9. [Obstacle Avoidance Code](#obstacle-avoidance-code)
-10. [Complete Examples](#complete-examples)
-11. [Quick Debug Commands](#quick-debug-commands)
+1. **[⚠️ CRITICAL CONFIGURATION](#️-critical-configuration-read-this-first)** ← **START HERE!**
+2. [Setup & Build Commands](#setup--build-commands)
+3. [Publisher Templates](#publisher-templates)
+4. [Subscriber Templates](#subscriber-templates)
+5. [Service Templates](#service-templates)
+6. [Action Templates](#action-templates)
+7. [Launch File Templates](#launch-file-templates)
+8. [Turtlesim Movement Patterns](#turtlesim-movement-patterns)
+9. [Line Follower Code](#line-follower-code)
+10. [Obstacle Avoidance Code](#obstacle-avoidance-code)
+11. [Complete Examples](#complete-examples)
+12. [Quick Debug Commands](#quick-debug-commands)
+13. [Common Errors & Fixes](#-common-errors--fixes)
+
+---
+
+# ⚠️ CRITICAL CONFIGURATION (READ THIS FIRST!)
+
+## For Custom Services (.srv files)
+
+**You MUST edit these files before service will work:**
+
+### 1. package.xml
+```xml
+<build_depend>message_generation</build_depend>
+<exec_depend>message_runtime</exec_depend>
+```
+
+### 2. CMakeLists.txt
+```cmake
+find_package(catkin REQUIRED COMPONENTS
+  rospy
+  std_msgs
+  message_generation  # ← ADD THIS
+)
+
+add_service_files(FILES YourService.srv)  # ← ADD THIS
+generate_messages(DEPENDENCIES std_msgs)  # ← ADD THIS
+
+catkin_package(
+  CATKIN_DEPENDS message_runtime  # ← ADD THIS
+)
+```
+
+### 3. Build
+```bash
+cd ~/catkin_ws
+catkin_make
+source devel/setup.bash
+```
+
+---
+
+## For Custom Actions (.action files)
+
+**You MUST edit these files before action will work:**
+
+### 1. package.xml
+```xml
+<build_depend>message_generation</build_depend>
+<build_depend>actionlib_msgs</build_depend>
+<exec_depend>message_runtime</exec_depend>
+<exec_depend>actionlib_msgs</exec_depend>
+```
+
+### 2. CMakeLists.txt
+```cmake
+find_package(catkin REQUIRED COMPONENTS
+  rospy
+  std_msgs
+  actionlib_msgs      # ← ADD THIS
+  message_generation  # ← ADD THIS
+)
+
+add_action_files(FILES YourAction.action)           # ← ADD THIS
+generate_messages(DEPENDENCIES std_msgs actionlib_msgs)  # ← ADD THIS
+
+catkin_package(
+  CATKIN_DEPENDS message_runtime actionlib_msgs  # ← ADD THIS
+)
+```
+
+### 3. Build
+```bash
+cd ~/catkin_ws
+catkin_make
+source devel/setup.bash
+```
+
+---
+
+## ⚠️ WHY IS THIS NEEDED?
+
+**Without these changes:**
+- ❌ `ImportError: No module named 'my_package.srv'`
+- ❌ `ImportError: No module named 'my_package.msg'`
+- ❌ Service/Action Python classes won't be generated
+
+**With these changes:**
+- ✅ ROS auto-generates Python/C++ classes from .srv/.action files
+- ✅ You can import: `from my_package.srv import MyService`
+- ✅ You can import: `from my_package.msg import MyActionAction`
+
+**Order matters:**
+1. Create .srv or .action file
+2. Edit package.xml
+3. Edit CMakeLists.txt
+4. Run `catkin_make` ← **MUST DO THIS!**
+5. Source workspace
+6. Now write your Python scripts
 
 ---
 
@@ -199,15 +298,29 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
+# Add service files
 add_service_files(
   FILES
   AddTwoInts.srv
 )
 
+# Generate messages
 generate_messages(
   DEPENDENCIES
   std_msgs
 )
+
+# IMPORTANT: Update catkin_package to include message_runtime
+catkin_package(
+  CATKIN_DEPENDS rospy roscpp std_msgs message_runtime
+)
+```
+
+**CRITICAL**: After editing package.xml and CMakeLists.txt:
+```bash
+cd ~/catkin_ws
+catkin_make
+source devel/setup.bash
 ```
 
 ## Python Service Server
@@ -338,6 +451,54 @@ string message
 ---
 # Feedback
 int32 current
+```
+
+## Step 2: Update package.xml
+
+```xml
+<build_depend>message_generation</build_depend>
+<build_depend>actionlib_msgs</build_depend>
+<exec_depend>message_runtime</exec_depend>
+<exec_depend>actionlib_msgs</exec_depend>
+```
+
+## Step 3: Update CMakeLists.txt
+
+```cmake
+find_package(catkin REQUIRED COMPONENTS
+  rospy
+  roscpp
+  std_msgs
+  actionlib_msgs
+  message_generation
+)
+
+# Add action files
+add_action_files(
+  FILES
+  Countdown.action
+)
+
+# Generate messages (MUST include actionlib_msgs!)
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  actionlib_msgs
+)
+
+# IMPORTANT: Update catkin_package
+catkin_package(
+  CATKIN_DEPENDS rospy roscpp std_msgs actionlib_msgs message_runtime
+)
+```
+
+## Step 4: Build
+
+**CRITICAL**: Must build after creating .action file!
+```bash
+cd ~/catkin_ws
+catkin_make
+source devel/setup.bash
 ```
 
 ## Python Action Server
@@ -1272,6 +1433,69 @@ rosmsg show geometry_msgs/Twist
 
 # See all message types
 rosmsg list
+
+# Check if custom service/action messages are generated
+rosmsg show my_package/AddTwoInts      # For services
+rosmsg show my_package/CountdownAction # For actions
+rossrv show my_package/AddTwoInts      # Alternative for services
+```
+
+---
+
+# 🚨 COMMON ERRORS & FIXES
+
+## Error: "No module named 'my_package.srv'"
+
+**Cause**: Service messages not generated
+
+**Fix**:
+```bash
+# 1. Check package.xml has message_generation
+# 2. Check CMakeLists.txt has add_service_files()
+# 3. Rebuild:
+cd ~/catkin_ws
+catkin_make
+source devel/setup.bash
+```
+
+## Error: "No module named 'my_package.msg'"
+
+**Cause**: Action messages not generated
+
+**Fix**:
+```bash
+# 1. Check package.xml has actionlib_msgs
+# 2. Check CMakeLists.txt has add_action_files()
+# 3. Rebuild:
+cd ~/catkin_ws
+catkin_make
+source devel/setup.bash
+```
+
+## Error: "Unable to load manifest for package"
+
+**Cause**: CMakeLists.txt or package.xml syntax error
+
+**Fix**:
+```bash
+# Check for typos in XML tags
+# Check for missing dependencies
+# Try clean build:
+cd ~/catkin_ws
+rm -rf build/ devel/
+catkin_make
+```
+
+## Verify Service/Action Messages Exist
+
+```bash
+# After catkin_make, check if messages were generated:
+ls ~/catkin_ws/devel/lib/python3/dist-packages/my_package/srv/
+ls ~/catkin_ws/devel/lib/python3/dist-packages/my_package/msg/
+
+# Should see generated Python files like:
+# _AddTwoInts.py
+# _CountdownAction.py
 ```
 
 ---
